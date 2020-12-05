@@ -11,22 +11,37 @@ Role installs and manages services using systemd. Currently supported Prometheus
   - SNMP exporter
   - Blackbox exporter
 
-Playbook includes extensive configuration options check default/main.yml
+Playbook includes extensive configuration options check [default/main.yml](https://github.com/llamalump/ansible-prometheus/blob/master/defaults/main.yml)
 
 Contributing
 ------------
 
-Please see `CONTRIBUTING.md` for details on how you can contribute to this repo.
+Pull requests are always welcome! If you'd like to contribute, please:
+
+1. Fork this repo 
+1. Make your changes in a feature branch
+1. [Raise a Pull Request](https://github.com/llamalump/ansible-prometheus/compare)
 
 Installation
 ------------
 
-ansible-galaxy install llamalump.ansible-prometheus
+To "install" this role, you can either install via Ansible Galaxy:
+
+    ```bash
+    ansible-galaxy install llamalump.ansible-prometheus
+    ```
+
+Or you can simply clone the repository:
+
+    ```bash
+    git clone https://github.com/llamalump/ansible-prometheus.git
+    ```
 
 Requirements
 ------------
 
-Systemd
+* Systemd
+* Firewalld (the role will install this for you, and open the required ports as well)
 
 Role Variables
 --------------
