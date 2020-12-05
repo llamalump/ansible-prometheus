@@ -5,11 +5,11 @@ Ansible role for installing Prometheus monitoring system.
 
 Role installs and manages services using systemd. Currently supported Prometheus modules:
   - Prometheus
-  - Node Exporter (collects metrics of host machine)
-  - Alert manager
-  - Push gateway
-  - SNMP exporter
-  - Blackbox exporter
+  - Node_exporter (collects metrics of host machine)
+  - Alertmanager
+  - Push_gateway
+  - SNMP_exporter
+  - Blackbox_exporter
 
 Playbook includes extensive configuration options check [default/main.yml](https://github.com/llamalump/ansible-prometheus/blob/master/defaults/main.yml)
 
@@ -19,8 +19,11 @@ Contributing
 Pull requests are always welcome! If you'd like to contribute, please:
 
 1. Fork this repo 
-1. Make your changes in a feature branch
-1. [Raise a Pull Request](https://github.com/llamalump/ansible-prometheus/compare)
+1. Make your changes in a feature branch of the forked repo
+1. [Raise a Pull Request](https://github.com/llamalump/ansible-prometheus/compare). Please make sure you:
+  * Update the documentation where necessary (`README.md` as well as anything in [docs/](https://github.com/llamalump/ansible-prometheus/tree/master/docs))
+  * Include as much information in the PR as you can about the change
+  * Test the changes to ensure they don't introduce any problems
 
 Installation
 ------------
