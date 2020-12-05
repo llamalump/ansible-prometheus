@@ -10,7 +10,7 @@
 - name: "Ensure Firewalld is installed"
   package:
     name: firewalld
-    state: latest
+    state: present
 
 - name: "Ensure Firewalld is running and enabled"
   systemd:
