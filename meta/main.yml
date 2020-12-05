@@ -23,22 +23,15 @@ galaxy_info:
     - alert
     - manager
     - alertmanager
-    - alert_manager
     - node
     - exporter
     - nodeexporter
-    - node_exporter
     - blackbox
     - blackboxexporter
-    - blackbox_exporter
-    - black_box_exporter
-    - black_boxexporter
     - snmp
     - snmpexporter
-    - snmp_exporter
     - push
     - gateway
     - pushgateway
-    - push_gateway
 
 dependencies: []
