@@ -27,15 +27,11 @@ Installation
 
 To "install" this role, you can either install via Ansible Galaxy:
 
-    ```bash
     ansible-galaxy install llamalump.ansible-prometheus
-    ```
 
 Or you can simply clone the repository:
 
-    ```bash
     git clone https://github.com/llamalump/ansible-prometheus.git
-    ```
 
 Requirements
 ------------
