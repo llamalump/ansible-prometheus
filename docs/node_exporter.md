@@ -50,7 +50,8 @@ prometheus_collector__web__max_requests: 40
 # Maximum number of parallel scrape requests. Use 0 to disable.
 prometheus_collector__log__level: 'info'
 # Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]. (default info)
-prometheus_collector__web__listen_address: ':9100'
+prometheus_collector__web__listen_port: "9100"
+prometheus_collector__web__listen_address: ":{{ prometheus_collector__web__listen_port }}"
 # Address on which to expose metrics and web interface. (default ":9100")
 prometheus_collector__web__telemetry_path: '/metrics'
 # Path under which to expose metrics. (default "/metrics")
@@ -66,9 +67,11 @@ prometheus_collector_____enabled_collectors:
   - 'collector.bonding'
   - 'collector.cpu'
   - 'collector.cpufreq'
+  - 'collector.diskstats'
   - 'collector.edac'
   - 'collector.entropy'
   - 'collector.filefd'
+  - 'collector.filesystem'
   - 'collector.hwmon'
   - 'collector.ipvs'
   - 'collector.loadavg'
@@ -87,9 +90,7 @@ prometheus_collector_____enabled_collectors:
   - 'collector.zfs'
 #  - 'collector.buddyinfo' # disabled by default
 #  - 'collector.conntrack' # disabled by default
-#  - 'collector.diskstats' # disabled by default
 #  - 'collector.drbd' # disabled by default
-#  - 'collector.filesystem' # disabled by default
 #  - 'collector.infiniband' # disabled by default
 #  - 'collector.interrupts' # disabled by default
 #  - 'collector.ksmd' # disabled by default

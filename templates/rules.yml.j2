@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+
+{% if alert_manager_rules is not none and alert_manager_rules | length > 0 %}
+{{ {'groups': alert_manager_rules} | to_nice_yaml }}
+{% endif %}
+

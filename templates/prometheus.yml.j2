@@ -1,3 +1,6 @@
+# {{ ansible_managed }}
+
+# Global configuration
 {{
 {
 'global': {
@@ -8,22 +11,17 @@
 } | to_nice_yaml
 }}
 
+{% if prometheus_config_alerting is not none and prometheus_config_alerting | length > 0 %}
+# Alertmanager configuration
+{{ {'alerting': prometheus_config_alerting} | to_nice_yaml }}
+{% endif %}
+
 {% if prometheus_config_rule_files is not none %}
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
 {{ {'rule_files': prometheus_config_rule_files} | to_nice_yaml }}
 {% endif %}
 
 {% if prometheus_config_scrape_configs is not none and prometheus_config_scrape_configs | length > 0 %}
+# Scrape configurations
 {{ {'scrape_configs': prometheus_config_scrape_configs} | to_nice_yaml }}
-{% endif %}
-
-{% if prometheus_config_alerting is not none and prometheus_config_alerting | length > 0 %}
-{{ {'alerting': prometheus_config_alerting} | to_nice_yaml }}
-{% endif %}
-
-{% if prometheus_config_remote_write is not none and prometheus_config_remote_write | length > 0 %}
-{{ {'remote_write': prometheus_config_remote_write} | to_nice_yaml }}
-{% endif %}
-
-{% if prometheus_config_remote_read is not none and prometheus_config_remote_read | length > 0 %}
-{{ {'remote_read': prometheus_config_remote_read} | to_nice_yaml }}
 {% endif %}

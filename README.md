@@ -1,11 +1,9 @@
 ansible-prometheus
 =========
 
-[![Build Status](https://travis-ci.org/ernestas-poskus/ansible-prometheus.svg?branch=master)](https://travis-ci.org/ernestas-poskus/ansible-prometheus)
+Ansible role for installing Prometheus monitoring system.
 
-Ansilbe playbook for installing Prometheus monitoring system.
-
-Playbook installs and manages services using systemd. Currently supported:
+Role installs and manages services using systemd. Currently supported Prometheus modules:
   - Prometheus
   - Node Exporter (collects metrics of host machine)
   - Alert manager
@@ -15,17 +13,15 @@ Playbook installs and manages services using systemd. Currently supported:
 
 Playbook includes extensive configuration options check default/main.yml
 
-Contribution
+Contributing
 ------------
 
-If you can't find exporter you need check these examples
-[#47](https://github.com/ernestas-poskus/ansible-prometheus/pull/47) or [#50](https://github.com/ernestas-poskus/ansible-prometheus/pull/50)
-and make pull request.
+Please see `CONTRIBUTING.md` for details on how you can contribute to this repo.
 
 Installation
 ------------
 
-ansible-galaxy install ernestas-poskus.ansible-prometheus
+ansible-galaxy install llamalump.ansible-prometheus
 
 Requirements
 ------------
@@ -37,61 +33,73 @@ Role Variables
 
 ```yaml
 ---
-# defaults file for ansible-prometheus
+# defaults/main.yml - Defaults for ansible-prometheus
 
-prometheus_install: true
+# versions
+prometheus_version: "2.22.2"
+node_exporter_version: "1.0.1"
+alert_manager_version: "0.21.0"
+push_gateway_version: "1.3.0"
+snmp_exporter_version: "0.19.0"
+blackbox_exporter_version: "0.18.0"
+
+# General defaults
+prometheus_platform_architecture: 'linux-amd64'
+
+# Default installation flags
+prometheus_install: false
 prometheus_node_exporter_install: true
-prometheus_alert_manager_install: true
+prometheus_alert_manager_install: false
 prometheus_push_gateway_install: false
 prometheus_snmp_exporter_install: false
 prometheus_blackbox_exporter_install: false
 
-prometheus_owner: 'prometheus'
-prometheus_group: 'prometheus'
+# Default service user/group configuration
+prometheus_service_user: "prometheus"
+prometheus_service_group: "prometheus"
 
-prometheus_install_dir: '/usr/local/opt'
-prometheus_config_dir: '/etc/prometheus'
-prometheus_lib_dir: '/var/lib/prometheus'
+# Default directory configurations
+prometheus_base_install_dir: "/opt"
+prometheus_install_dir: "{{ prometheus_base_install_dir }}/prometheus"
+prometheus_lib_dir: "/var/lib/prometheus"
+prometheus_config_dir: "/etc/prometheus"
 prometheus_rules_dir: "{{ prometheus_config_dir }}/rules"
+prometheus_data_base_dir: "/data/prometheus"
+prometheus_data_dir: "{{ prometheus_data_base_dir }}/prometheus/data"
 
-prometheus_data_dir: "{{ prometheus_lib_dir }}/prometheus2"
-prometheus_alert_manager_data_dir: "{{ prometheus_lib_dir }}/alertmanager"
-prometheus_alert_manager_config_dir: "{{ prometheus_config_dir }}/alertmanager"
-prometheus_alert_manager_templates_dir: "{{ prometheus_config_dir }}/alertmanager/templates"
-prometheus_snmp_exporter_config_dir: "{{ prometheus_config_dir }}/snmpexporter"
-prometheus_blackbox_exporter_config_dir: "{{ prometheus_config_dir }}/blackboxexporter"
+# Prometheus server defaults
+prometheus_server_conf_template_src: "templates/prometheus.yml.j2"
+prometheus_server_conf_dst: "{{ prometheus_config_dir }}/prometheus.yml"
 
-# Prometheus
-prometheus_version: '2.13.1'
-prometheus_platform_architecture: 'linux-amd64'
+# Node_exporter defaults
+node_exporter_install_dir: "{{ prometheus_base_install_dir }}/node_exporter"
+node_exporter_service_file_template_src: "templates/node_exporter.service.j2"
+node_exporter_service_file_dst: "/etc/systemd/system/node_exporter.service"
 
-# Node exporter
-prometheus_node_exporter_version: '0.18.1'
+# Alertmanager defaults
+alert_manager_install_dir: "{{ prometheus_base_install_dir }}/alertmanager"
+alert_manager_data_dir: "{{ prometheus_data_base_dir }}/alertmanager/data"
+alert_manager_config_dir: "{{ prometheus_config_dir }}/alertmanager"
+alert_manager_templates_dir: "{{ alert_manager_config_dir }}/templates"
 
-# Alert manager
-prometheus_alert_manager_version: '0.18.0'
+# SNMP exporter defaults
+snmp_exporter_config_dir: "{{ prometheus_config_dir }}/snmpexporter"
 
-# Pushgateway
-prometheus_push_gateway_version: '1.0.0'
-
-# SNMP exporter
-prometheus_snmp_exporter_version: '0.15.0'
-
-# Blackbox exporter
-prometheus_blackbox_exporter_version: '0.15.1'
+# Blackbox exporter defaults
+blackbox_exporter_config_dir: "{{ prometheus_config_dir }}/blackboxexporter"
 ```
 
-[DOCS: Prometheus variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/prometheus.md)
+[DOCS: Prometheus variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/prometheus.md)
 
-[DOCS: Node exporter variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/node_exporter.md)
+[DOCS: Node exporter variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/node_exporter.md)
 
-[DOCS: Alert manager variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/alert_manager.md)
+[DOCS: Alert manager variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/alert_manager.md)
 
-[DOCS: Pushgateway variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/push_gateway.md)
+[DOCS: Pushgateway variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/push_gateway.md)
 
-[DOCS: SNMP exporter variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/snmp_exporter.md)
+[DOCS: SNMP exporter variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/snmp_exporter.md)
 
-[DOCS: Blackbox exporter variables](https://github.com/ernestas-poskus/ansible-prometheus/blob/master/docs/blackbox_exporter.md)
+[DOCS: Blackbox exporter variables](https://github.com/llamalump/ansible-prometheus/blob/master/docs/blackbox_exporter.md)
 
 Dependencies
 ------------
@@ -101,11 +109,9 @@ None.
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
 ```yaml
-- name: Installing Prometheus on hosted machine
-  hosts: vagrant1
+- name: Instal Prometheus on hosted machine
+  hosts: servers
   sudo: yes
   roles:
     - role: ansible-prometheus
@@ -114,15 +120,6 @@ Including an example of how to use your role (for instance, with variables passe
           honor_labels: true
           scrape_interval: '15s'
           scrape_timeout: '3s'
-          metrics_path: '/metrics'
-          scheme: 'http'
-          static_configs:
-            - targets:
-                - 'localhost:9090' # Prometheus itself
-                - 'localhost:9100' # Node exporter
-        - job_name: 'consul-services'
-          consul_sd_configs:
-            - server: "localhost:8500"
 ```
 
 License
@@ -156,7 +153,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author Information
-------------------
-
-Twitter: @ernestas_poskus

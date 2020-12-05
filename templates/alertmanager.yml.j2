@@ -1,4 +1,7 @@
+# {{ ansible_managed }}
+
 {% if prometheus_alert_manager_config_global is not none %}
+# Global configuration
 {{ {'global': prometheus_alert_manager_config_global } | to_nice_yaml }}
 {% endif %}
 

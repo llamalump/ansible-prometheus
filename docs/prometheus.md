@@ -4,29 +4,15 @@
 # Prometheus
 # https://prometheus.io/docs/operating/configuration/
 
-prometheus_config_global_scrape_interval: '15s'
-prometheus_config_global_evaluation_interval: '30s'
+prometheus_config_global_scrape_interval: "15s"
+prometheus_config_global_evaluation_interval: "30s"
 prometheus_config_global_scrape_timeout: '10s'
 prometheus_config_global_external_labels:
 prometheus_config_rule_files:
-  - "{{ prometheus_rules_dir }}/*.rules.yml"
-
-# Prometheus alert manager rules
-# since Ansible uses double curly braces as well as Prometheus for
-# variable interpolation in alerts use square brackets, those will be
-# replaced to curly braces in task
-prometheus_rules:
-  - name: instancedown
-    rules:
-    - alert: InstanceDown
-      expr: up == 0
-      for: '10s'
-      annotations:
-        summary: 'Instance [[ $labels.instance ]] down'
-        description: '[[ $labels.instance ]] of job [[ $labels.job ]] has been down for more than 10 seconds.'
+  - "{{ prometheus_rules_dir }}/*rules.yml"
 
 # Allow Prometheus to disover alert managers
-prometheus_config_scrape_configs:
+prometheus_config_scrape_configs: ""
   # - job_name: 'prometheus'
   #   honor_labels: true
   #   scrape_interval: '20s'
@@ -45,7 +31,7 @@ prometheus_config_alerting:
   alertmanagers:
   - static_configs:
     - targets:
-      - localhost:9093
+      - "localhost{{ prometheus_alert_manager_web__listen_address }}"
 
 # Allow Prometheus to write in remote storage
 prometheus_config_remote_write:
@@ -58,10 +44,11 @@ prometheus_config_remote_read:
 prometheus_config__file: "{{ prometheus_config_dir }}/prometheus.yml"
 # Prometheus configuration file name.
 
-prometheus_log__format: "logfmt"
+prometheus_log__format: "json"
 # Output format of log messages. One of: [logfmt, json]
 
-prometheus_web__listen_address: ":9090"
+prometheus_web__listen_port: "9090"
+prometheus_web__listen_address: ":{{ prometheus_web__listen_port }}"
 # Address to listen on for the web interface, API, and telemetry.
 
 prometheus_web__read_timeout: '30s'

@@ -1,0 +1,36 @@
+- name: Include node exporter variables
+  include_vars: 'nodeexporter.yml'
+
+- name: "Create {{ node_exporter_install_dir }}"
+  file:
+    path: "{{ node_exporter_install_dir }}"
+    state: directory
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    mode: "2770"
+    recurse: yes
+
+- name: Download and extract Prometheus node exporter tarball
+  unarchive:
+    src: "{{ node_exporter_tarball_url }}"
+    dest: "{{ node_exporter_install_dir }}"
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    copy: no
+    creates: "{{ node_exporter_install_dir }}/{{ node_exporter_archive }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Install Prometheus node_exporter systemd service
+  template:
+    src: "{{ node_exporter_service_file_template_src }}"
+    dest: "{{ node_exporter_service_file_dst }}"
+  notify:
+    - daemon-reload
+    - restart node_exporter
+
+- name: "Expose port {{ prometheus_collector__web__listen_port }}/tcp in firewall"
+  firewalld:
+    port: "{{ prometheus_collector__web__listen_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes

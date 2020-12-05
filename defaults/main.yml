@@ -1,73 +1,74 @@
 ---
-# defaults file for ansible-prometheus
+# defaults/main.yml: Defaults for Prometheus
 
-prometheus_install: true
+client_fqdn: [] # Do not remove/modify OR define outside of this file - Needed to be empty for prometheus.yml.j2
+
+## versions
+prometheus_version: "2.22.2"
+node_exporter_version: "1.0.1"
+alert_manager_version: "0.21.0"
+push_gateway_version: "1.3.0"
+snmp_exporter_version: "0.19.0"
+blackbox_exporter_version: "0.18.0"
+
+## General Prometheus defaults
+prometheus_platform_architecture: 'linux-amd64'
+
+prometheus_install: false
 prometheus_node_exporter_install: true
-prometheus_alert_manager_install: true
+prometheus_alert_manager_install: false
 prometheus_push_gateway_install: false
 prometheus_snmp_exporter_install: false
 prometheus_blackbox_exporter_install: false
 
-prometheus_owner: 'prometheus'
-prometheus_group: 'prometheus'
+prometheus_service_user: "prometheus"
+prometheus_service_group: "prometheus"
 
-prometheus_install_dir: '/usr/local/opt'
-prometheus_config_dir: '/etc/prometheus'
-prometheus_lib_dir: '/var/lib/prometheus'
+prometheus_base_install_dir: "/opt"
+
+prometheus_install_dir: "{{ prometheus_base_install_dir }}/prometheus"
+prometheus_lib_dir: "/var/lib/prometheus"
+prometheus_config_dir: "/etc/prometheus"
 prometheus_rules_dir: "{{ prometheus_config_dir }}/rules"
 
-prometheus_data_dir: "{{ prometheus_lib_dir }}/prometheus2"
-prometheus_alert_manager_data_dir: "{{ prometheus_lib_dir }}/alertmanager"
-prometheus_alert_manager_config_dir: "{{ prometheus_config_dir }}/alertmanager"
-prometheus_alert_manager_templates_dir: "{{ prometheus_config_dir }}/alertmanager/templates"
-prometheus_snmp_exporter_config_dir: "{{ prometheus_config_dir }}/snmpexporter"
-prometheus_blackbox_exporter_config_dir: "{{ prometheus_config_dir }}/blackboxexporter"
+prometheus_data_base_dir: "/data/prometheus"
+prometheus_data_dir: "{{ prometheus_data_base_dir }}/prometheus/data"
 
-# Prometheus
-prometheus_version: '2.13.1'
-prometheus_platform_architecture: 'linux-amd64'
+alert_manager_install_dir: "{{ prometheus_base_install_dir }}/alertmanager"
+alert_manager_data_dir: "{{ prometheus_data_base_dir }}/alertmanager/data"
+alert_manager_config_dir: "{{ prometheus_config_dir }}/alertmanager"
+alert_manager_templates_dir: "{{ alert_manager_config_dir }}/templates"
 
-# Node exporter
-prometheus_node_exporter_version: '0.18.1'
+# SNMP exporter defaults
+snmp_exporter_config_dir: "{{ prometheus_config_dir }}/snmpexporter"
 
-# Alert manager
-prometheus_alert_manager_version: '0.18.0'
+# Blackbox exporter defaults
+blackbox_exporter_config_dir: "{{ prometheus_config_dir }}/blackboxexporter"
 
-# Pushgateway
-prometheus_push_gateway_version: '1.0.0'
+## node_exporter defaults
+node_exporter_install_dir: "{{ prometheus_base_install_dir }}/node_exporter"
+node_exporter_service_file_template_src: "templates/node_exporter.service.j2"
+node_exporter_service_file_dst: "/etc/systemd/system/node_exporter.service"
 
-# SNMP exporter
-prometheus_snmp_exporter_version: '0.15.0'
+## prometheus server defaults
+prometheus_server_conf_template_src: "templates/prometheus.yml.j2"
+prometheus_server_conf_dst: "{{ prometheus_config_dir }}/prometheus.yml"
 
-# Blackbox exporter
-prometheus_blackbox_exporter_version: '0.15.1'
-
-# Prometheus
-# https://prometheus.io/docs/operating/configuration/
-
-prometheus_config_global_scrape_interval: '15s'
-prometheus_config_global_evaluation_interval: '30s'
+prometheus_config_global_scrape_interval: "15s"
+prometheus_config_global_evaluation_interval: "30s"
 prometheus_config_global_scrape_timeout: '10s'
 prometheus_config_global_external_labels:
 prometheus_config_rule_files:
-  - "{{ prometheus_rules_dir }}/*.rules.yml"
+  - "{{ prometheus_rules_dir }}/*rules.yml"
 
 # Prometheus alert manager rules
 # since Ansible uses double curly braces as well as Prometheus for
 # variable interpolation in alerts use square brackets, those will be
 # replaced to curly braces in task
 prometheus_rules:
-  - name: instancedown
-    rules:
-    - alert: InstanceDown
-      expr: up == 0
-      for: '10s'
-      annotations:
-        summary: 'Instance [[ $labels.instance ]] down'
-        description: '[[ $labels.instance ]] of job [[ $labels.job ]] has been down for more than 10 seconds.'
 
 # Allow Prometheus to disover alert managers
-prometheus_config_scrape_configs:
+prometheus_config_scrape_configs: ""
   # - job_name: 'prometheus'
   #   honor_labels: true
   #   scrape_interval: '20s'
@@ -86,7 +87,7 @@ prometheus_config_alerting:
   alertmanagers:
   - static_configs:
     - targets:
-      - localhost:9093
+      - "localhost{{ prometheus_alert_manager_web__listen_address }}"
 
 # Allow Prometheus to write in remote storage
 prometheus_config_remote_write:
@@ -99,10 +100,11 @@ prometheus_config_remote_read:
 prometheus_config__file: "{{ prometheus_config_dir }}/prometheus.yml"
 # Prometheus configuration file name.
 
-prometheus_log__format: "logfmt"
+prometheus_log__format: "json"
 # Output format of log messages. One of: [logfmt, json]
 
-prometheus_web__listen_address: ":9090"
+prometheus_web__listen_port: "9090"
+prometheus_web__listen_address: ":{{ prometheus_web__listen_port }}"
 # Address to listen on for the web interface, API, and telemetry.
 
 prometheus_web__read_timeout: '30s'
@@ -270,7 +272,8 @@ prometheus_collector__web__max_requests: 40
 # Maximum number of parallel scrape requests. Use 0 to disable.
 prometheus_collector__log__level: 'info'
 # Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]. (default info)
-prometheus_collector__web__listen_address: ':9100'
+prometheus_collector__web__listen_port: "9100"
+prometheus_collector__web__listen_address: ":{{ prometheus_collector__web__listen_port }}"
 # Address on which to expose metrics and web interface. (default ":9100")
 prometheus_collector__web__telemetry_path: '/metrics'
 # Path under which to expose metrics. (default "/metrics")
@@ -286,9 +289,11 @@ prometheus_collector_____enabled_collectors:
   - 'collector.bonding'
   - 'collector.cpu'
   - 'collector.cpufreq'
+  - 'collector.diskstats'
   - 'collector.edac'
   - 'collector.entropy'
   - 'collector.filefd'
+  - 'collector.filesystem'
   - 'collector.hwmon'
   - 'collector.ipvs'
   - 'collector.loadavg'
@@ -307,9 +312,7 @@ prometheus_collector_____enabled_collectors:
   - 'collector.zfs'
 #  - 'collector.buddyinfo' # disabled by default
 #  - 'collector.conntrack' # disabled by default
-#  - 'collector.diskstats' # disabled by default
 #  - 'collector.drbd' # disabled by default
-#  - 'collector.filesystem' # disabled by default
 #  - 'collector.infiniband' # disabled by default
 #  - 'collector.interrupts' # disabled by default
 #  - 'collector.ksmd' # disabled by default
@@ -352,7 +355,7 @@ prometheus_alert_manager_config_global:
 
 # The directory from which notification templates are read.
 prometheus_alert_manager_config_templates:
-  - "{{ prometheus_alert_manager_templates_dir }}/*.tmpl"
+  - "{{ alert_manager_templates_dir }}/*.tmpl"
 
 # The root route on which each incoming alert enters.
 prometheus_alert_manager_config_route:
@@ -411,7 +414,7 @@ prometheus_alert_manager_cluster__settle_timeout: '1m'
 prometheus_alert_manager_cluster__tcp_timeout: '10s'
 # Timeout for establishing a stream connection with a remote node for a
 # full state sync, and for stream read and write operations.
-prometheus_alert_manager_config__file: "{{ prometheus_alert_manager_config_dir }}/alertmanager.yml"
+prometheus_alert_manager_config__file: "{{ alert_manager_config_dir }}/alertmanager.yml"
 # Alertmanager configuration file name. (default "alertmanager.yml")
 prometheus_alert_manager_data__retention: '120h0m0s'
 # How long to keep data for. (default 120h0m0s)
@@ -419,7 +422,7 @@ prometheus_alert_manager_log__format: 'logfmt'
 # Output format of log messages. One of: [logfmt,json]
 prometheus_alert_manager_log__level: 'info'
 # Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]. (default info)
-prometheus_alert_manager_storage__path: "{{ prometheus_alert_manager_data_dir }}"
+prometheus_alert_manager_storage__path: "{{ alert_manager_data_dir }}"
 # Base path for data storage. (default "data/")
 prometheus_alert_manager_web__external_url:
 # The URL under which Alertmanager is externally reachable
@@ -431,7 +434,9 @@ prometheus_alert_manager_web__get_concurrency:
 # Maximum number of GET requests processed
 # concurrently. If negative or zero, the limit is
 # GOMAXPROC or 8, whichever is larger.
-prometheus_alert_manager_web__listen_address: ':9093'
+prometheus_alert_manager_web__listen_port_low: "9093"
+prometheus_alert_manager_web__listen_port_high: "9094"
+prometheus_alert_manager_web__listen_address: ":{{ prometheus_alert_manager_web__listen_port_low }}"
 # Address to listen on for the web:interface and API. (default ":9093")
 prometheus_alert_manager_web__route_prefix:
 # Prefix for the internal routes of web endpoints. Defaults to path of -web.external-url.

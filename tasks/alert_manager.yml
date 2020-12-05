@@ -1,0 +1,62 @@
+- name: Include alert_manager variables
+  include_vars: 'alertmanager.yml'
+
+- name: Creating alert manager directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    mode: "2770"
+  with_items:
+    - "{{ prometheus_lib_dir }}"
+    - "{{ prometheus_config_dir }}"
+    - "{{ alert_manager_install_dir }}"
+    - "{{ alert_manager_data_dir }}"
+    - "{{ alert_manager_config_dir }}"
+    - "{{ alert_manager_templates_dir }}"
+
+- name: Download and extract Prometheus alert_manager tarball
+  unarchive:
+    src: "{{ alert_manager_tarball_url }}"
+    dest: "{{ alert_manager_install_dir }}"
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    copy: no
+    creates: "{{ alert_manager_install_dir }}/{{ alert_manager_archive }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Copy alertmanager config
+  template:
+    src: alertmanager.yml.j2
+    dest: "{{ alert_manager_config_dir }}/alertmanager.yml"
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+    validate: "{{ alert_manager_install_dir }}/{{ alert_manager_archive }}/amtool check-config %s"
+  notify:
+    restart alertmanager
+
+- name: Deploy alerting rules
+  template:
+    src: rules.yml.j2
+    dest: "{{ prometheus_rules_dir }}/rules.yml"
+    owner: "{{ prometheus_service_user }}"
+    group: "{{ prometheus_service_group }}"
+  notify:
+    - restart alertmanager
+    - restart prometheus
+
+- name: Install Prometheus alert manager systemd service
+  template:
+    src: alertmanager.service.j2
+    dest: /etc/systemd/system/alertmanager.service
+  notify:
+    - daemon-reload
+    - restart alertmanager
+
+- name: "Expose port {{ prometheus_alert_manager_web__listen_port }}/tcp in firewall"
+  firewalld:
+    port: "{{ prometheus_alert_manager_web__listen_port_low }}-{{ prometheus_alert_manager_web__listen_port_high }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
